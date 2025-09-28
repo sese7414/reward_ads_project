@@ -161,9 +161,6 @@ def load_click():
 def load_ads_pool():
     """ads_pool 로딩"""
     df = pd.read_csv(DATA_PATHS["ads_pool"])
-    df["ads_os_type"] = df["ads_os_type"].map(os_map).fillna("기타")
-    df["ads_category"] = df["ads_category"].map(ads_category_map).fillna("기타")
-    df['ads_rejoin_type'] = df['ads_rejoin_type'].map(ads_rejoin_type_map).fillna("기타")
     return df.iloc[:, 2:]
 
 
@@ -193,20 +190,12 @@ def load_ads_time():
 def load_ads_segment():
     """ads_segment 로딩"""
     df = pd.read_csv(DATA_PATHS["ads_segment"])
-    df["ads_os_type"] = df["ads_os_type"].map(os_map).fillna("기타")
-    df["ads_category"] = df["ads_category"].map(ads_category_map).fillna("기타")
-    df['ads_rejoin_type'] = df['ads_rejoin_type'].map(ads_rejoin_type_map).fillna("기타")
     return df.iloc[:, 1:]
 
 @st.cache_data
 def load_new_ads_pool():
     """new_ads_pool 로딩"""
-    df = pd.read_csv(DATA_PATHS["new_ads_pool"])
-    df['ads_type'] = df["ads_type"].map(ads_type_map).fillna("기타")
-    df["ads_os_type"] = df["ads_os_type"].map(os_map).fillna("기타")
-    df["ads_category"] = df["ads_category"].map(ads_category_map).fillna("기타")
-    df['ads_rejoin_type'] = df['ads_rejoin_type'].map(ads_rejoin_type_map).fillna("기타")
-    return df
+    return pd.read_csv(DATA_PATHS["new_ads_pool"])
 
 
 def load_model_bundle():

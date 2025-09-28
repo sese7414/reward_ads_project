@@ -145,7 +145,13 @@ def create_performance_chart(ads_analysis):
 
 def display_kpi_metrics(row):
     """KPI 메트릭 표시"""
-    total_conversions, ads_cvr, total_net_return, days_active = row[['total_conversions', 'cvr', 'total_net_return', 'days_active']]
+    # 숫자 변환 (안전하게)
+    row = row.copy()
+    row["contract_price"] = pd.to_numeric(row["contract_price"], errors="coerce")
+    row["media_price"] = pd.to_numeric(row["media_price"], errors="coerce")
+    total_conversions = pd.to_numeric(row["total_conversions"], errors="coerce")
+
+    ads_cvr, total_net_return, days_active = row[['cvr', 'total_net_return', 'days_active']]
     revenue = row["contract_price"] * total_conversions
     spend = row["media_price"] * total_conversions
     ads_roas = revenue / spend if spend != 0 else 0

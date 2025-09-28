@@ -18,6 +18,38 @@ st.set_page_config(
     layout="wide"
 )
 
+os_map = {
+    1: "AppStore",
+    2: "GooglePlay",
+    3: "원스토어",
+    7: "Web",
+    8: "갤럭시 스토어"
+}
+
+ads_category_map = {
+    0: "카테고리 선택안함",
+    1: "앱(간편적립)",
+    2: "경험하기(게임적립)/앱",
+    3: "구독(간편적립)",
+    4: "간편미션-퀴즈",
+    5: "경험하기(게임적립)",
+    6: "멀티보상(게임적립)",
+    7: "금융(참여적립)",
+    8: "무료참여(참여적립)",
+    10: "유료참여(참여적립)",
+    11: "쇼핑-상품별카테고리",
+    12: "제휴몰(쇼핑적립)",
+    13: "간편미션(간편적립)"
+}
+
+ads_type_map = {
+    1:'설치형', 2:'실행형', 3:'참여형', 4:'클릭형', 5:'페북', 6:'트위터', 7:'인스타', 8:'노출형', 9:'퀘스트', 10:'유튜브', 11:'네이버', 12:'CPS(물건구매)'
+}
+
+ads_rejoin_type_map = {
+    'NONE': '재참여불가', 'ADS_CODE_DAILY_UPDATE': '매일 재참여가능', 'REJOINABLE': '계속 재참여 가능'
+}
+
 @st.cache_data
 def load_all_required_data():
     """모든 필수 데이터 로딩"""
@@ -119,16 +151,18 @@ def display_similarity_recommendations(ads_index, click, media_portfolio):
 
 def show_existing_ad_analysis(ads_index, data):
     """기존 광고 분석 화면"""
-    ads_pool = data['ads_pool']
+    ads_segment = data['ads_segment']
     click = data['click']
     media_portfolio = data['media_portfolio']
     model_bundle = load_model_bundle()
     st.markdown("\n")
 
     # 기본 정보 표시
-    row = ads_pool.loc[ads_pool['ads_idx'] == ads_index].iloc[0]
+    row = ads_segment.loc[ads_segment['ads_idx'] == ads_index].iloc[0]
     st.subheader("📋 기존 광고 기본 정보")
     data = row[['ads_name','ads_category','domain','ads_os_type','ctit_median','ads_size']].to_frame().T
+    data["ads_os_type"] = data["ads_os_type"].map(os_map).fillna("기타")
+    data["ads_category"] = data["ads_category"].map(ads_category_map).fillna("기타")
     data.columns = ['광고 이름','광고 카테고리','도메인','타겟 os 타입','CTIT 중앙값','광고 규모']
     st.dataframe(data, width='stretch')
     st.markdown("\n")
@@ -204,8 +238,13 @@ def display_new_machesa(pred):
 
         with col1:
             # 표 (Top 20)
-            view = pred.loc[pred['cvr_mc'].notna(), ["mda_idx","pred_cvr",
-                "scenarioB_clicks","scenarioB_conv"]].head(20)
+            # cvr_mc 컬럼 존재 확인
+            if 'cvr_mc' in pred.columns:
+                view = pred.loc[pred['cvr_mc'].notna(), ["mda_idx","pred_cvr","scenarioB_clicks","scenarioB_conv"]].head(20)
+            else:
+                # cvr_mc가 없으면 전체 데이터 사용
+                view = pred[["mda_idx","pred_cvr", "scenarioB_clicks","scenarioB_conv"]].head(20)
+            
             st.dataframe(view.style.format({
                 "pred_cvr":"{:.6f}", 
                 "scenarioB_clicks":"{:.3f}", "scenarioB_conv":"{:.3f}"
@@ -213,6 +252,7 @@ def display_new_machesa(pred):
                 "pred_cvr": "예측 전환율",
                 "scenarioB_clicks": "예상 클릭 수",
                 "scenarioB_conv": "예상 전환 수"})
+
         with col2:
             # 가로 막대그래프가 더 보기 좋을 수 있음
             # top10_sorted = top10.sort_values('pred_cvr', ascending=True)  # 오름차순 정렬
@@ -221,15 +261,16 @@ def display_new_machesa(pred):
             fig1 = px.bar(
                 top10.sort_values('pred_cvr', ascending=True),
                 x="pred_cvr",
-                y="mda_label",
+                y="mda_idx",
                 orientation='h',
                 text="pred_cvr",
-                labels={"mda_label": "매체사 ID", "pred_cvr": "예측 전환율"},
+                labels={"mda_idx": "매체사 ID", "pred_cvr": "예측 전환율"},
                 title="상위 10개 매체사 예측 전환율",
                 color="pred_cvr",
                 color_continuous_scale="Blues"
             )
             fig1.update_traces(texttemplate="%{text:.2%}", textposition="outside")
+            fig1.update_yaxes(type='category')  # ← 핵심: y축을 범주형으로 설정
             fig1.update_layout(height=400)
             st.plotly_chart(fig1, use_container_width=True)
 
@@ -276,10 +317,11 @@ def display_new_machesa(pred):
             yaxis2=dict(title="예측 전환율", overlaying="y", side="right", tickformat=".0%"),
             legend=dict(x=0.01, y=0.99)
         )
+        fig3.update_xaxes(type='category')  # ← 핵심: y축을 범주형으로 설정
         st.plotly_chart(fig3, use_container_width=True)
 
 
-def display_new_ad_recommendations(ads_index, new_ads_pool, ads_pool):
+def display_new_ad_recommendations(ads_index, new_ads_pool, ads_segment):
     """신규 광고 추천 결과 표시"""
     try:
         results = run_new_ads_batch(new_ads_pool, 30)
@@ -290,19 +332,24 @@ def display_new_ad_recommendations(ads_index, new_ads_pool, ads_pool):
             
         pred, cohort, info = results[ads_index]
         
+
         # 코호트 상위 10개
         if cohort is not None and not cohort.empty:
             st.markdown("#### 유사 광고 코호트")
             disp = cohort.reset_index()[["ads_idx","sim","weight"]].head(10)
             
             # 코호트 광고 특성
-            cohort_ads = ads_pool.merge(disp, on='ads_idx', how='right')
+            cohort_ads = ads_segment.merge(disp, on='ads_idx', how='right')
+            cohort_ads["ads_os_type"] = cohort_ads["ads_os_type"].map(os_map).fillna("기타")
+            cohort_ads["ads_category"] = cohort_ads["ads_category"].map(ads_category_map).fillna("기타")
+            cohort_ads["ads_rejoin_type"] = cohort_ads["ads_rejoin_type"].map(ads_rejoin_type_map).fillna("기타")
+
             st.dataframe(cohort_ads[['ads_idx', 'ads_name', 'media_count', 'user_count', 'total_clicks',
                         'total_conversions', 'ads_category', 'domain', 'ads_os_type',
                          'ctit_median', 'ads_rejoin_type', 'contract_price', 'media_price', 
                          'first_click', 'last_click', 'ads_sdate', 'expire', 'days_active',
                     'daily_avg_conversions', 'cvr', 'margin', 'roi', 'total_net_return',
-                    'daily_clicks', 'daily_users', 'ads_size', 'cluster', 'mda_idx_arr', 'A', 'sim']], column_config={
+                    'daily_clicks', 'daily_users', 'ads_size', 'cluster', 'sim']], column_config={
                     "ads_idx": "광고 ID",
                     "media_count": "매체사 수",
                     "user_count": "참여 사용자 수",
@@ -330,8 +377,6 @@ def display_new_ad_recommendations(ads_index, new_ads_pool, ads_pool):
                     "daily_users": "일평균 사용자 수",
                     "ads_size": "광고 규모",
                     "cluster": "클러스터",
-                    "mda_idx_arr": "지정 매체사 ID 목록",
-                    "A": "모든 매체사 여부(A)", 
                     "sim":"유사도"
                     }, width='stretch')
         
@@ -345,21 +390,27 @@ def display_new_ad_recommendations(ads_index, new_ads_pool, ads_pool):
         st.error(f"❌ 추천 처리 중 오류: {e}")
 
 
+
 def show_new_ad_recommendation(ads_index, data):
     """신규 광고 추천 화면"""
     new_ads_pool = data['new_ads_pool']
-    ads_pool = data['ads_pool']
+    ads_segment = data['ads_segment']
 
     # 기본 정보 표시
     st.subheader("📋 신규 광고 기본 정보") # 🆕
-    row = new_ads_pool.loc[new_ads_pool['ads_idx'] == ads_index]
+    row = new_ads_pool.loc[new_ads_pool['ads_idx'] == ads_index].copy()
     data = row[['ads_name', 'ads_type', 'ads_category','domain','ads_os_type', 'ads_contract_price', 'ads_reward_price', 'ads_rejoin_type']]
+    data["ads_type"] = data["ads_type"].map(ads_type_map).fillna("기타")
+    data["ads_os_type"] = data["ads_os_type"].map(os_map).fillna("기타")
+    data["ads_category"] = data["ads_category"].map(ads_category_map).fillna("기타")
+    data["ads_rejoin_type"] = data["ads_rejoin_type"].map(ads_rejoin_type_map).fillna("기타")
+
     data.columns = ['광고 이름', '광고 타입', '광고 카테고리','도메인','타겟 os 타입','계약 단가','리워드 단가', '재참여 가능 타입']
     st.dataframe(data, width='stretch')
 
     # 추천 결과
     st.subheader("⭐ 추천 매체사")
-    display_new_ad_recommendations(ads_index, new_ads_pool, ads_pool)
+    display_new_ad_recommendations(ads_index, new_ads_pool, ads_segment)
 
 
 
@@ -395,7 +446,7 @@ def main():
         return
     
     # 4. 단순한 분기
-    if ads_index in data['ads_pool']['ads_idx'].values:
+    if ads_index in data['ads_segment']['ads_idx'].values:
         show_existing_ad_analysis(ads_index, data)
     elif ads_index in data['new_ads_pool']['ads_idx'].values:
         show_new_ad_recommendation(ads_index, data)

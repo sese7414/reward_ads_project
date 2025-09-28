@@ -10,7 +10,6 @@ import streamlit as st
 PERF_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/수정_시간별적립보고서(최종).csv"   # 시간별 집계(또는 로그)
 META_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/광고도메인리스트.csv"             # 기존 광고 메타(ads_idx 존재)
 NEW_ADS_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/신규가상광고.csv"                                                    # 신규 가상광고 목록
-EXIST_ADS_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/ads_pool.csv"
 
 # ----------------- 파일 경로 -----------------
 # PERF_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/수정_시간별적립보고서(최종).csv"   # 시간별 집계(또는 로그)
@@ -32,11 +31,6 @@ DROP_RARE_MIN_ADS = 3       # 희귀 원-핫 열 제거(3개 미만 광고에서
 CAT_COLS = ["domain", "ads_category", "ads_os_type", "ads_type", "ads_rejoin_type"]
 PRICE_CANDIDATES = ("ads_media_price", "media_price", "contract_price")
 
-@st.cache_data
-def load_ads_pool():
-    """ads_pool 로딩"""
-    df = pd.read_csv(EXIST_ADS_CSV)
-    return df.iloc[:, 2:]
 
 # ----------------- 작은 유틸 -----------------
 def _norm_meta(df):
