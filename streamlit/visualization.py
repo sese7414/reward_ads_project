@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -144,20 +145,20 @@ def create_performance_chart(ads_analysis):
 
 def display_kpi_metrics(row):
     """KPI 메트릭 표시"""
-    total_conversions, ads_cvr, margin = row[['total_conversions', 'cvr', 'margin']]
+    total_conversions, ads_cvr, total_net_return, days_active = row[['total_conversions', 'cvr', 'total_net_return', 'days_active']]
     revenue = row["contract_price"] * total_conversions
     spend = row["media_price"] * total_conversions
     ads_roas = revenue / spend if spend != 0 else 0
 
-    # col1, col2, col3, col4 = st.columns(4)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("전체 전환 수", f"{int(total_conversions):,}")
-    with col2:
-        st.metric("CVR(클릭대비전환율)", f"{float(ads_cvr):.2%}")
-
-    col3, col4 = st.columns(2)
-    with col3:
-        st.metric("Margin", f"{int(margin):,} 원")
-    with col4:
-        st.metric("ROAS", f"{ads_roas:.2f}")
+    with st.container(horizontal=True, gap="medium"):
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            st.metric("전체 전환 수", f"{int(total_conversions):,}", border=True)
+        with col2:
+            st.metric("CVR(클릭대비전환율)", f"{float(ads_cvr):.2%}",  border=True)
+        with col3:
+            st.metric("총 순수익", f"{int(total_net_return):,} 원",  border=True)
+        with col4:
+            st.metric("ROAS", f"{ads_roas:.2f}",  border=True)
+        with col5:
+            st.metric("광고 활성화 일수", f"{int(days_active):,} 일",  border=True)

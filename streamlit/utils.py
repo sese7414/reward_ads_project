@@ -1,18 +1,54 @@
 import os
 import re
+import joblib
 import pandas as pd
+import numpy as np
 import streamlit as st
 
 
 # 데이터 파일 경로 설정
 DATA_PATHS = {
     'click': "/Users/t2023-m0052/Documents/GitHub/final_project/data/유저테이블.csv",
+    'ads_pool': "/Users/t2023-m0052/Documents/GitHub/final_project/data/ads_pool.csv",
     'media_portfolio': "/Users/t2023-m0052/Documents/GitHub/final_project/data/media_performance_classification.csv",
     'media_performance_classification': "/Users/t2023-m0052/Documents/GitHub/final_project/data/media_performance_classification.csv",
     'ads_list': "/Users/t2023-m0052/Documents/GitHub/final_project/Sehee/수정2_광고목록.csv",
     'ads_time': "/Users/t2023-m0052/Documents/GitHub/final_project/data/수정_시간별적립보고서(최종).csv",
-    'ads_segment': "/Users/t2023-m0052/Documents/GitHub/final_project/data/ads_segment.csv" #,
-    # 'mda_df': "/Users/t2023-m0052/Documents/GitHub/final_project/data/mda_df.csv"
+    'ads_segment': "/Users/t2023-m0052/Documents/GitHub/final_project/data/ads_segment.csv",
+    'new_ads_pool':"/Users/t2023-m0052/Documents/GitHub/final_project/Sehee/신규가상광고.csv",
+    'model_bundle':"/Users/t2023-m0052/Documents/GitHub/final_project/streamlit/model_lightgbm.pkl"
+}
+
+os_map = {
+    1: "AppStore",
+    2: "GooglePlay",
+    3: "원스토어",
+    7: "Web",
+    8: "갤럭시 스토어"
+}
+
+ads_category_map = {
+    0: "카테고리 선택안함",
+    1: "앱(간편적립)",
+    2: "경험하기(게임적립)/앱",
+    3: "구독(간편적립)",
+    4: "간편미션-퀴즈",
+    5: "경험하기(게임적립)",
+    6: "멀티보상(게임적립)",
+    7: "금융(참여적립)",
+    8: "무료참여(참여적립)",
+    10: "유료참여(참여적립)",
+    11: "쇼핑-상품별카테고리",
+    12: "제휴몰(쇼핑적립)",
+    13: "간편미션(간편적립)"
+}
+
+ads_type_map = {
+    1:'설치형', 2:'실행형', 3:'참여형', 4:'클릭형', 5:'페북', 6:'트위터', 7:'인스타', 8:'노출형', 9:'퀘스트', 10:'유튜브', 11:'네이버', 12:'CPS(물건구매)'
+}
+
+ads_rejoin_type_map = {
+    'NONE': '재참여불가', 'ADS_CODE_DAILY_UPDATE': '매일 재참여가능', 'REJOINABLE': '계속 재참여 가능'
 }
 
 # 매체사 포트폴리오 각 매체사별 카테고리나 도메인 전환 비중 
@@ -125,7 +161,11 @@ def load_click():
 def load_ads_pool():
     """ads_pool 로딩"""
     df = pd.read_csv(DATA_PATHS["ads_pool"])
+    df["ads_os_type"] = df["ads_os_type"].map(os_map).fillna("기타")
+    df["ads_category"] = df["ads_category"].map(ads_category_map).fillna("기타")
+    df['ads_rejoin_type'] = df['ads_rejoin_type'].map(ads_rejoin_type_map).fillna("기타")
     return df.iloc[:, 2:]
+
 
 @st.cache_data
 def load_ads_list():
@@ -153,11 +193,28 @@ def load_ads_time():
 def load_ads_segment():
     """ads_segment 로딩"""
     df = pd.read_csv(DATA_PATHS["ads_segment"])
+    df["ads_os_type"] = df["ads_os_type"].map(os_map).fillna("기타")
+    df["ads_category"] = df["ads_category"].map(ads_category_map).fillna("기타")
+    df['ads_rejoin_type'] = df['ads_rejoin_type'].map(ads_rejoin_type_map).fillna("기타")
     return df.iloc[:, 1:]
 
+@st.cache_data
+def load_new_ads_pool():
+    """new_ads_pool 로딩"""
+    df = pd.read_csv(DATA_PATHS["new_ads_pool"])
+    df['ads_type'] = df["ads_type"].map(ads_type_map).fillna("기타")
+    df["ads_os_type"] = df["ads_os_type"].map(os_map).fillna("기타")
+    df["ads_category"] = df["ads_category"].map(ads_category_map).fillna("기타")
+    df['ads_rejoin_type'] = df['ads_rejoin_type'].map(ads_rejoin_type_map).fillna("기타")
+    return df
+
+
+def load_model_bundle():
+    """model_bundle 로딩"""
+    return joblib.load(DATA_PATHS["model_bundle"])
 
 @st.cache_data
-def load_mda_enriched_date(mda_pf, click):
+def load_mda_enriched_data(mda_pf, click):
     # clicks_df: 원본 클릭/전환 테이블 (mda_idx, ads_category, domain, conversion 포함)
     # mda_pf: 매체 프로필 테이블 (mda_idx 기준)
 
