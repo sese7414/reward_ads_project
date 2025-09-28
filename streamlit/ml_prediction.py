@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
-import joblib
 from typing import Dict, Optional, Set
+from utils import load_ads_time
 from sklearn.metrics import roc_auc_score
 
 # -------------------------------
@@ -139,7 +139,6 @@ def _build_excluded_pairs_for_ad(
 def get_new_media_for_ad(
     preds_with_counts: Dict[int, pd.DataFrame],
     ad_id: int,
-    ads_time: pd.DataFrame,
     running_pairs: Optional[pd.DataFrame] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
@@ -156,6 +155,8 @@ def get_new_media_for_ad(
     if cand.empty:
         return cand
 
+    ads_time = load_ads_time()
+
     # 2) 제외할 mda 집합 구성
     excluded_mdas = _build_excluded_pairs_for_ad(
         ad_id=ad_id,
@@ -171,10 +172,10 @@ def get_new_media_for_ad(
     out = cand[~cand["mda_idx"].astype(int).isin(excluded_mdas)].copy()
 
     # 4) 이름 붙이기(옵션)
-    if media_meta is not None:
-        cols = [c for c in ["mda_idx","mda_name"] if c in media_meta.columns]
-        if "mda_idx" in cols and len(cols) >= 1:
-            out = out.merge(media_meta[cols].drop_duplicates("mda_idx"), on="mda_idx", how="left")
+    # if media_meta is not None:
+    #     cols = [c for c in ["mda_idx","mda_name"] if c in media_meta.columns]
+    #     if "mda_idx" in cols and len(cols) >= 1:
+    #         out = out.merge(media_meta[cols].drop_duplicates("mda_idx"), on="mda_idx", how="left")
 
     # 5) top N
     if top is not None:

@@ -98,10 +98,10 @@ def display_ml_recommendations(ads_index, model_bundle):
     preds_with_counts = model_bundle['preds_with_counts']
     tgt_large = model_bundle['tgt_large']
     
-    top_recommend = recommend_top_media(ads_index, preds_with_counts, 5)
+    top_recommend = get_new_media_for_ad(preds_with_counts, ads_index, top=10)
     eval_df = predict_evaluate_all(preds_with_counts, tgt_large)
     
-    st.dataframe(top_recommend, 
+    st.dataframe(top_recommend[['mda_idx', 'yhat_turn', 'score']], 
                  column_config={
                 "mda_idx": "매체사 ID",
                 "yhat_turn": "예측 전환수 (5일)",  
