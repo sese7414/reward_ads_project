@@ -7,14 +7,14 @@ import pandas as pd
 import streamlit as st
 
 # ----------------- 파일 경로 -----------------
-PERF_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/수정_시간별적립보고서(최종).csv"   # 시간별 집계(또는 로그)
-META_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/광고도메인리스트.csv"             # 기존 광고 메타(ads_idx 존재)
-NEW_ADS_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/신규가상광고.csv"                                                    # 신규 가상광고 목록
+# PERF_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/수정_시간별적립보고서(최종).csv"   # 시간별 집계(또는 로그)
+# META_CSV = "/Users/t2023-m0052/Documents/GitHub/final_project/data/광고도메인리스트.csv"             # 기존 광고 메타(ads_idx 존재)
+# NEW_ADS_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/신규가상광고.csv"                                                    # 신규 가상광고 목록
 
 # ----------------- 파일 경로 -----------------
-# PERF_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/수정_시간별적립보고서(최종).csv"   # 시간별 집계(또는 로그)
-# META_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/광고도메인리스트.csv"             # 기존 광고 메타(ads_idx 존재)
-# NEW_ADS_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/신규가상광고.csv"                                                    # 신규 가상광고 목록
+PERF_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/수정_시간별적립보고서(최종).csv"   # 시간별 집계(또는 로그)
+META_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/광고도메인리스트.csv"             # 기존 광고 메타(ads_idx 존재)
+NEW_ADS_CSV = "/Users/Jiwon/Documents/GitHub/final_project/Jiwon/신규가상광고.csv"                                                    # 신규 가상광고 목록
 
 # ----------------- 하이퍼파라미터 -----------------
 # L_DAYS = 30                 # 예측에 사용할 과거 창 길이 # 이거를 아예 받아버릴까?
