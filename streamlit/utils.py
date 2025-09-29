@@ -8,7 +8,7 @@ import streamlit as st
 
 # 데이터 파일 경로 설정
 # DATA_PATHS = {
-#     'click': "/Users/t2023-m0052/Documents/GitHub/final_project/data/유저테이블.csv",
+#     'click': "streamlit/click.parquet",
 #     'ads_pool': "/Users/t2023-m0052/Documents/GitHub/final_project/data/ads_pool.csv",
 #     'media_portfolio': "/Users/t2023-m0052/Documents/GitHub/final_project/data/media_performance_classification.csv",
 #     'media_performance_classification': "/Users/t2023-m0052/Documents/GitHub/final_project/data/media_performance_classification.csv",
@@ -169,6 +169,7 @@ def add_cat_domain_to_mda_pf(
 @st.cache_data
 def load_click():
     """유저테이블(click 데이터) 로딩"""
+    # return pd.read_parquet(DATA_PATHS["click"], engine="pyarrow")
     return pd.read_csv(DATA_PATHS["click"])
 
 @st.cache_data

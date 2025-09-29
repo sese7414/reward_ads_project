@@ -150,8 +150,9 @@ def display_kpi_metrics(row):
     row["contract_price"] = pd.to_numeric(row["contract_price"], errors="coerce")
     row["media_price"] = pd.to_numeric(row["media_price"], errors="coerce")
     total_conversions = pd.to_numeric(row["total_conversions"], errors="coerce")
-
-    ads_cvr, total_net_return, days_active = row[['cvr', 'total_net_return', 'days_active']]
+    total_clicks = pd.to_numeric(row["total_clicks"], errors="coerce")
+    ads_cvr = total_conversions / total_clicks if total_clicks != 0 else 0
+    total_net_return, days_active = row[['total_net_return', 'days_active']]
     revenue = row["contract_price"] * total_conversions
     spend = row["media_price"] * total_conversions
     ads_roas = revenue / spend if spend != 0 else 0
