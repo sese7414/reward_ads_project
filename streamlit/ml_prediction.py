@@ -154,7 +154,7 @@ def get_new_media_for_ad(
     cand = get_expected_conversions_for_ad(preds_with_counts, ad_id, sort_by=sort_by, top=None)
     if cand.empty:
         return cand
-
+    
     ads_time = load_ads_time()
 
     # 2) 제외할 mda 집합 구성
